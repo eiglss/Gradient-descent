@@ -20,12 +20,14 @@
 #define SYSTEM_SIZE 3
 
 /**** GRADIENT DESCENT PARAMETERS *****/
-#define GAMMA       0.001
-#define MAX_ITER    200
+#define GAMMA       0.0001
+#define MAX_ITER    100000
 #define FUNC_TOL    0.1
 
 #define GD_VERBOSE   /* comment the line to not display information
                         of gradient descent */
+
+#define PTHREAD
 
 /*******************************     TYPES      *******************************/
 typedef struct

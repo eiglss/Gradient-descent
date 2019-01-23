@@ -11,6 +11,7 @@
 /*******************************    LIBRARIES    *******************************/
 #include "gradient.h"
 #include <math.h>
+#include <pthread.h>
 
 /*******************************     MACROS     *******************************/
 
@@ -134,6 +135,7 @@ static double (*gradient_function[SYSTEM_SIZE])(state_t * x) = {gradient_functio
                                                                 gradient_function_1,\
                                                                 gradient_function_2};
 
+
 /**** objective function ****/
 static inline double objective_function(state_t * x)
 {
@@ -141,43 +143,45 @@ static inline double objective_function(state_t * x)
     size_t i;
     double sq_y[SYSTEM_SIZE];
     double sum = 0;
+    double y;
     /* program */
-    for(i = 0; i < SYSTEM_SIZE; i++) /* multi-threading possible */
+    for(i = 0; i < SYSTEM_SIZE; i++)
     {
-        sq_y[i] = function[i](x)*function[i](x);
-    }
-    for(i = 0; i < SYSTEM_SIZE; i++) /* multi-threading impossible */
-    {
+        y = function[i](x); /* multi-threading possible */
+        sq_y[i] = y*y;
         sum += sq_y[i];
     }
     return 0.5*sum;
 }
 
 /**** gradient descent ****/
-static inline double gradient_descent_0(state_t * x)
+static inline void gradient_descent_0(state_t * x)
 {
-    return x->x[0] = x->x[0]-GAMMA*gradient_function[0](x);
+    x->x[0] = x->x[0]-GAMMA*gradient_function[0](x);
 }
 
-static inline double gradient_descent_1(state_t * x)
+static inline void gradient_descent_1(state_t * x)
 {
-    return x->x[1] = x->x[1]-GAMMA*gradient_function[1](x);
+    x->x[1] = x->x[1]-GAMMA*gradient_function[1](x);
 }
 
-static inline double gradient_descent_2(state_t * x)
+static inline void gradient_descent_2(state_t * x)
 {
-    return x->x[2] = x->x[2]-GAMMA*gradient_function[2](x);
+    x->x[2] = x->x[2]-GAMMA*gradient_function[2](x);
 }
 
-static double (*gradient_descent[SYSTEM_SIZE])(state_t * x) = {gradient_descent_0,\
-                                                               gradient_descent_1,\
-                                                               gradient_descent_2};
+static void (*gradient_descent[SYSTEM_SIZE])(state_t * x) = {gradient_descent_0,\
+                                                             gradient_descent_1,\
+                                                             gradient_descent_2};
 
 void gradient_descent_loop(state_t * x)
 {
     /* declaration */
     size_t iter = 0;
     size_t i;
+    #ifdef PTHREAD
+    pthread_t thread[SYSTEM_SIZE];
+    #endif
     /* program */
     do
     {
@@ -186,8 +190,18 @@ void gradient_descent_loop(state_t * x)
         #endif
         for(i = 0; i < SYSTEM_SIZE; i++) /* multi-threading possible */
         {
+            #ifdef PTHREAD
+            pthread_create(&thread[i], NULL, (void *)gradient_descent[i], (void *) x);
+            #else
             gradient_descent[i](x);
+            #endif
         }
+        #ifdef PTHREAD
+        for(i = 0; i < SYSTEM_SIZE; i++) /* multi-threading possible */
+        {
+            pthread_join(thread[i], NULL);
+        }
+        #endif
     }
     while(++iter < MAX_ITER && objective_function(x) > FUNC_TOL); /* multi-threading impossible */
     #ifdef GD_VERBOSE

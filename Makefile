@@ -35,8 +35,8 @@ OBJ_DIR 			:= output
 
 CC              		:= gcc
 GDB			    		:= gdb
-INCLUDES 				:= -I $(INC_DIR) -lm
-COMMONFLAGS 			:= -g -gstrict-dwarf -Wall
+INCLUDES 				:= -I $(INC_DIR) -lm -lpthread
+COMMONFLAGS 			:= -g -gstrict-dwarf -Wall -pthread
 CFLAGS 					:= $(COMMONFLAGS)
 LDFLAGS 				:= $(COMMONFLAGS)
 
