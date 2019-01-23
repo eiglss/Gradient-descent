@@ -27,7 +27,7 @@
 #define GD_VERBOSE   /* comment the line to not display information
                         of gradient descent */
 
-#define PTHREAD
+//#define PTHREAD
 
 /*******************************     TYPES      *******************************/
 typedef struct
